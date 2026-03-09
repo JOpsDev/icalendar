@@ -50,5 +50,6 @@ defimpl ICalendar.Serialize, for: ICalendar do
     PRODID:-//Elixir ICalendar//#{vendor}//EN
     #{events}END:VCALENDAR
     """
+    |> String.replace(~r/\r?\n/, "\r\n")
   end
 end
