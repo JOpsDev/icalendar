@@ -1,12 +1,19 @@
 defmodule ICalendarTest do
   use ExUnit.Case
 
+  defmacrop assert_ics_equal(left, right) do
+    quote do
+      assert String.replace(unquote(left), "\r\n", "\n") ==
+               String.replace(unquote(right), "\r\n", "\n")
+    end
+  end
+
   @vendor "ICalendar Test"
 
   test "ICalendar.to_ics/1 of empty calendar" do
     ics = %ICalendar{} |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -18,7 +25,7 @@ defmodule ICalendarTest do
   test "ICalendar.to_ics/1 of empty calendar with custom vendor" do
     ics = %ICalendar{} |> ICalendar.to_ics(vendor: @vendor)
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -47,7 +54,7 @@ defmodule ICalendarTest do
 
     ics = %ICalendar{events: events} |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -84,7 +91,7 @@ defmodule ICalendarTest do
 
     ics = %ICalendar{events: events} |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -116,7 +123,7 @@ defmodule ICalendarTest do
 
     ics = %ICalendar{events: events} |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -189,7 +196,7 @@ defmodule ICalendarTest do
       %ICalendar{events: events}
       |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -216,7 +223,7 @@ defmodule ICalendarTest do
 
     ics = %ICalendar{events: events} |> ICalendar.to_ics()
 
-    assert ics == """
+    assert_ics_equal ics, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -296,7 +303,7 @@ defmodule ICalendarTest do
 
     assert {:ok, ical} = ICalendar.encode_to_iodata(cal, [])
 
-    assert ical == """
+    assert_ics_equal ical, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -341,7 +348,7 @@ defmodule ICalendarTest do
 
     assert {:ok, ical} = ICalendar.encode_to_iodata(cal)
 
-    assert ical == """
+    assert_ics_equal ical, """
            BEGIN:VCALENDAR
            CALSCALE:GREGORIAN
            VERSION:2.0
@@ -362,5 +369,12 @@ defmodule ICalendarTest do
            END:VEVENT
            END:VCALENDAR
            """
+  end
+
+  test "ICalendar.to_ics/1 uses CRLF line endings per RFC 5545" do
+    ics = %ICalendar{} |> ICalendar.to_ics()
+
+    assert String.contains?(ics, "\r\n")
+    refute String.match?(ics, ~r/[^\r]\n/)
   end
 end
